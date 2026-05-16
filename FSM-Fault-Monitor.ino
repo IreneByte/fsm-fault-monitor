@@ -1,5 +1,5 @@
 /*
-  v0 - FSM-Based Monitoring System
+  v1 - FSM-Based Monitoring System
 
   Features:
   - Push button state control
@@ -39,6 +39,10 @@ State lastState = RESET_REQUIRED;
 // Tracks previous button state for edge detection
 int lastButtonReading = HIGH;
 
+// Debounce times
+unsigned long lastDebounceTime = 0;
+unsigned long debounceDelay = 50;
+
 void setup() {
   // Configure input pins using internal pull-up resistors
   pinMode(buttonPin, INPUT_PULLUP);
@@ -64,27 +68,35 @@ void loop() {
 // Handles button input and state transitions
 void handleButton() {
   // Read current button state
-  int buttonReading = digitalRead(buttonPin);
+  int currentbuttonReading = digitalRead(buttonPin);
 
-  // Detects a new button press
-  if (buttonReading == LOW && lastButtonReading == HIGH) {
-    // State transition logic
-    if (currentState == IDLE) {
-      currentState = RUNNING;
-    } 
-    else if (currentState == RUNNING) {
-      currentState = IDLE;
-    }
-    else if (currentState == FAULT) {
-      currentState = RESET_REQUIRED;
-    }
-    else if (currentState == RESET_REQUIRED) {
-      currentState = IDLE;
+  // Reset debounce timer if reading changes
+  if (currentbuttonReading != lastButtonReading) {
+    lastDebounceTime = millis();
+  }
+
+  // Only accept stable button presses
+  if ((millis() - lastDebounceTime) > debounceDelay) {
+    // Detects a new button press
+    if (currentbuttonReading == LOW && lastButtonReading == HIGH) {
+      // State transition logic
+      if (currentState == IDLE) {
+        currentState = RUNNING;
+      } 
+      else if (currentState == RUNNING) {
+        currentState = IDLE;
+      }
+      else if (currentState == FAULT) {
+        currentState = RESET_REQUIRED;
+      }
+      else if (currentState == RESET_REQUIRED) {
+        currentState = IDLE;
+      }
     }
   }
 
   // Store button state for next loop iteration
-  lastButtonReading = buttonReading;
+  lastButtonReading = currentbuttonReading;
 }
 
 // Checks for fault conditions during operation

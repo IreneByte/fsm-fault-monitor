@@ -85,14 +85,47 @@ void setup() {
 
   dht.begin();
   Serial.begin(9600);
+
+  runSelfTest();
 }
 
 void loop() {
   handleButton();
   readSensors();
-  checkFault();
+  testFault();
   updateLCD();
   updateOutputs();
+}
+
+void runSelfTest() {
+  int lightLevel = analogRead(photoresPin);
+
+  bool dhtFailed = isnan(dht.readTemperature());
+  // SR04 not tested since ping_cm() returns 0 for both out of range and disconnected -> Indistinguishable without extra hardware
+  bool ldrFailed = (lightLevel == 0 || lightLevel == 1023);
+
+  testSensor("TESTING DHT...", dhtFailed);
+  testSensor("TESTING LDR...", ldrFailed);
+  
+  lcd.clear();
+
+  bool failFlag = dhtFailed || ldrFailed;
+  currentState = (failFlag) ? IDLE : RUNNING;
+}
+
+void testSensor(const char* name, bool failed) {
+  const int startDelay = 1500;
+  
+  lcd.clear();
+
+  lcd.setCursor(0, 0);
+  lcd.print(name);
+
+  delay(startDelay);
+  lcd.setCursor(0, 1);
+
+  lcd.print((failed) ? "FAIL" : "OK");
+  delay(startDelay);
 }
 
 void readSensors() {
@@ -105,7 +138,6 @@ void readSensors() {
 
     // Temperature
     temperature = dht.readTemperature();
-
     if (isnan(temperature)) return;
 
     // Fault Detection
@@ -187,8 +219,8 @@ void handleButton() {
   }
 }
 
-// Checks for fault conditions during operation
-void checkFault() {
+// Button that creates test fault
+void testFault() {
   // Fault can only trigger while system is running
   if (currentState == RUNNING && digitalRead(faultPin) == LOW) {
     currentFault = "F0 TEST FAULT";
@@ -208,18 +240,22 @@ void updateLCD() {
     switch (currentState) {
       case IDLE:
         lcd.print("SYS: IDLE");
+        printRunTime("IDLE");
         break;
       
       case RUNNING:
         lcd.print("SYS: RUNNING");
+        printRunTime("RUNNING");
         break;
 
       case FAULT:
         lcd.print("SYS: FAULT!");
+        printRunTime("FAULT");
         break;
 
       case RESET_REQUIRED:
         lcd.print("SYS: RESET");
+        printRunTime("RESET REQUIRED");
         break;
 
       default:
@@ -235,6 +271,16 @@ void updateLCD() {
 
     lastFault = currentFault;
   }
+}
+
+void printRunTime(const char* state) {
+  unsigned long runTime = millis();
+
+  Serial.print("[");
+  Serial.print(runTime);
+  Serial.print("] STATE: ");
+  Serial.println(state);
+
 }
 
 // Controls LED and buzzer outputs based on system state
@@ -267,7 +313,7 @@ void updateOutputs() {
     
     default:
       break;
-    }
+  }
 }
 
 // Controls RGB LED color using PWM

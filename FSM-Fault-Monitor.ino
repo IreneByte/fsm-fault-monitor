@@ -1,14 +1,3 @@
-/*
-  v4 - FSM-Based Monitoring System
-
-  Features:
-  - Push button state control
-  - Input fault detection
-  - LCD status display
-  - RGB LED status indication
-  - Active buzzer alarm during fault state
-*/
-
 #include <LiquidCrystal.h>
 #include <DHT.h>
 #include <NewPing.h>

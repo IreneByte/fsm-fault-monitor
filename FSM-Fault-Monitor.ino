@@ -91,7 +91,6 @@ void setup() {
 
 void loop() {
   handleButton();
-  readSensors();
   detectFaults();
   testFault();
   updateLCD();
@@ -129,7 +128,7 @@ void testSensor(const char* name, bool failed) {
   delay(startDelay);
 }
 
-void readSensors() {
+void detectFaults() {
   if (currentState == RUNNING) {
     // Ultrasonic
     distance = sensor.ping_cm();
@@ -141,14 +140,6 @@ void readSensors() {
     temperature = dht.readTemperature();
     if (isnan(temperature)) return;
 
-  } else {
-    objectDetectedTime = 0;
-  }
-}
-
-// Fault Detection
-void detectFaults() {
-  if (currentState == RUNNING) {
     // F01 - Object too close
     if (distance < distanceThreshold) {
       if (objectDetectedTime == 0) {

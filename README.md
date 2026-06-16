@@ -8,7 +8,7 @@ Sensor fault detection system built on Arduino. Monitors distance, temperature, 
 ![Status](https://img.shields.io/badge/Status-Complete-success?style=flat-square)
 
 ## Demo [![YouTube](https://img.shields.io/badge/See%20the%20demo-red?style=flat-square&logo=YouTube)](https://www.youtube.com/watch?v=zTN1_Ybi4fk)
-
+![Physical Build](https://github.com/IreneByte/FSM-Fault-Monitor/blob/main/src/images/collage.png)
 
 ## Overview
 ### What It Does
